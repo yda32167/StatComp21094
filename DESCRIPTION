@@ -7,13 +7,13 @@ Author: Daao Yu
 Maintainer: Daao Yu <2351651935@qq.com>
 Description: Several R and Rcpp function are included in this package for illustration.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.7)
+Imports: Rcpp (>= 1.0.7),ROCR
 Encoding: UTF-8
 RoxygenNote: 7.1.2
-Suggests: knitr, rmarkdown
+Suggests: knitr, rmarkdown,ROCR,Rcpp
 VignetteBuilder: knitr
 URL: https://github.com/yda32167/StatComp21094
 BugReports: https://github.com/yda32167/StatComp21094/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 2.10),ROCR
 LazyData: true

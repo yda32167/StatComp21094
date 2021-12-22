@@ -13,14 +13,14 @@
 #' @export
 #' @examples
 pagerk <-function(pages){
-  
+
   adjacencyMatrix<-function(pages){
     n<-max(apply(pages,2,max))
     A <- matrix(0,n,n)
     for(i in 1:nrow(pages)) A[pages[i,]$dist,pages[i,]$src]<-1
     A
   }
-  
+
   probabilityMatrix<-function(G){
     cs <- colSums(G)
     cs[cs==0] <- 1
@@ -29,6 +29,7 @@ pagerk <-function(pages){
     for (i in 1:n) A[i,] <- A[i,] + G[i,]/cs
     A
   }
+  
 
   dProbabilityMatrix<-function(G,d=0.85){
     cs <- colSums(G)
@@ -40,6 +41,7 @@ pagerk <-function(pages){
     A
   }
   
+
   eigenMatrix<-function(G,iter=100){
     iter<-10
     n<-nrow(G)
@@ -47,15 +49,16 @@ pagerk <-function(pages){
     for (i in 1:iter) x <- G %*% x
     x/sum(x)
   }
-  
+
   names(pages)<-c("src","dist")
   A<-adjacencyMatrix(pages)
   G<-probabilityMatrix(A)
-  q<-eigenMatrix(G,100)
-  q
+  q1<-eigenMatrix(G,100)
   
+
   A<-adjacencyMatrix(pages)
   G<-dProbabilityMatrix(A)
-  q<-eigenMatrix(G,100)
-  q
+  q2<-eigenMatrix(G,100)
+  q<- cbind(q1,q2)
+  return(q)
 }

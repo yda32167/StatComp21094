@@ -12,17 +12,16 @@
 #' @import knitr
 #'
 #' @import ROCR
+#' 
 #'
 #' @return a list
 #' @export
 #' @examples
 library(ROCR)
 get_confusion_stat <- function(pred,y_real,threshold=0.5){
-  
   # auc
   tmp <- prediction(as.vector(pred),y_real)
   auc <- unlist(slot(performance(tmp,'auc'),'y.values'))
-  
   # statistic
   pred_new <- as.integer(pred>threshold) 
   tab <- table(pred_new,y_real)
@@ -30,18 +29,16 @@ get_confusion_stat <- function(pred,y_real,threshold=0.5){
     print('preds all zero !')
     return(0)
   }
-  
   TP <- tab[2,2]
   TN <- tab[1,1]
   FP <- tab[2,1]
   FN <- tab[1,2]
-  
   accuracy <- round((TP+TN)/(TP+FN+FP+TN),4)
   recall_sensitivity <- round(TP/(TP+FN),4)
   precision <- round(TP/(TP+FP),4)
   specificity <- round(TN/(TN+FP),4)
+
   
-  # 添加，预测的负例占比（业务解释：去除多少的样本，达到多少的recall）
   neg_rate <- round((TN+FN)/(TP+TN+FP+FN),4)
   re <- list('AUC' = auc,
              'Confusion_Matrix'=tab,
