@@ -1,0 +1,19 @@
+Package: StatComp21094
+Type: Package
+Title: A job of statistical calculation
+Version: 1.0
+Date: 2021-12-17
+Author: Daao Yu
+Maintainer: Daao Yu <2351651935@qq.com>
+Description: Several R and Rcpp function are included in this package for illustration.
+License: GPL (>= 2)
+Imports: Rcpp (>= 1.0.7)
+Encoding: UTF-8
+RoxygenNote: 7.1.2
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+URL: https://github.com/yda32167/StatComp21094
+BugReports: https://github.com/yda32167/StatComp21094/issues
+Depends: 
+    R (>= 2.10)
+LazyData: true

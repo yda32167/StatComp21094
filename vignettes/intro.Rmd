@@ -1,0 +1,137 @@
+---
+title: "Introduction to StatComp21094"
+author: "Daao Yu"
+date: ""
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to StatComp21094}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+### PageRank function  
+The PageRank algorithm is based on the random surfer model. The basic idea is that the importance of web pages is ranked by the link relationship between web pages. The algorithm relies on the link structure between web pages to evaluate the rank and importance of each page. 
+The PR value of a webpage not only considers the number of linked webpages pointing to it, but also the importance of other webpages pointing to its webpages.  
+
+
+### AUC function
+AUC (Area Under Curve) is defined as the area under the ROC curve. We often use the AUC value as the evaluation standard of the model because in many cases the ROC curve does not clearly indicate which classifier performs better, and as a value, a classifier with a larger AUC performs better.
+
+
+### function pagerk is defined as follows:
+In the calculation of the PageRank score of an updated page, each page evenly distributes its current PageRank value to the out-links contained in this page, so that each link obtains the corresponding weight. And each page sums the weights passed in by all in-chains that point to this page to get a new PageRank score. When each page obtains the updated PageRank value, a round of PageRank calculation is completed.
+
+```{r}
+pages=data.frame(v1=c(1,1,1,2,2,3,4),v2=c(2,3,4,3,4,4,2))
+
+pagerk <-function(pages){
+  #计算邻接矩阵
+  adjacencyMatrix<-function(pages){
+    n<-max(apply(pages,2,max))
+    A <- matrix(0,n,n)
+    for(i in 1:nrow(pages)) A[pages[i,]$dist,pages[i,]$src]<-1
+    A
+  }
+  #变换概率矩阵
+  probabilityMatrix<-function(G){
+    cs <- colSums(G)
+    cs[cs==0] <- 1
+    n <- nrow(G)
+    A <- matrix(0,nrow(G),ncol(G))
+    for (i in 1:n) A[i,] <- A[i,] + G[i,]/cs
+    A
+  }
+
+  #考虑d时的变换概率矩阵
+  dProbabilityMatrix<-function(G,d=0.85){
+    cs <- colSums(G)
+    cs[cs==0] <- 1
+    n <- nrow(G)
+    delta <- (1-d)/n
+    A <- matrix(delta,nrow(G),ncol(G))
+    for (i in 1:n) A[i,] <- A[i,] + d*G[i,]/cs
+    A
+  }
+  
+  #递归计算矩阵特征值
+  eigenMatrix<-function(G,iter=100){
+    iter<-10
+    n<-nrow(G)
+    x <- rep(1,n)
+    for (i in 1:iter) x <- G %*% x
+    x/sum(x)
+  }
+  #无阻尼系数下的pagerank值
+  names(pages)<-c("src","dist")
+  A<-adjacencyMatrix(pages)
+  G<-probabilityMatrix(A)
+  q1<-eigenMatrix(G,100)
+  
+  #阻尼系数d=0.85下的pagerank值
+  A<-adjacencyMatrix(pages)
+  G<-dProbabilityMatrix(A)
+  q2<-eigenMatrix(G,100)
+  q<- cbind(q1,q2)
+  return(q)
+}
+pagerk(pages)
+```
+Transitivity of PR value: When webpage A points to webpage B, the PR value of A is also partially passed to B.
+
+Transitivity of importance: an important web page is more important than the right to transmit an unimportant web page.
+
+From the above results, we find that the page with ID=1 has a PR value of 0, then the page with ID=1 cannot output weights to other pages, and the calculation will be unreasonable! Therefore, increase the d damping coefficient, correct the pages that are not linked to, and ensure that the minimum PR value of the page>0.
+
+After increasing the damping coefficient, the page with ID=1 will have a value of PR(1)=(1-d)/n=(1-0.85)/4=0.0375, which is the minimum value of pages without external links.
+
+
+### function AUC is defined as follows:
+pred is a vector with two classes of data, and it is the predicted value of the result.
+
+y_real is a vector with two classes of data, and it is the true value of the result.
+
+The threshold is set between 0 and 1, and is defaulted to 0.5
+
+```{r}
+library(ROCR)
+get_confusion_stat <- function(pred,y_real,threshold=0.5){
+  # auc
+  tmp <- prediction(as.vector(pred),y_real)
+  auc <- unlist(slot(performance(tmp,'auc'),'y.values'))
+  # statistic
+  pred_new <- as.integer(pred>threshold) 
+  tab <- table(pred_new,y_real)
+  if(nrow(tab)==1){
+    print('preds all zero !')
+    return(0)
+  }
+  TP <- tab[2,2]
+  TN <- tab[1,1]
+  FP <- tab[2,1]
+  FN <- tab[1,2]
+  accuracy <- round((TP+TN)/(TP+FN+FP+TN),4)
+  recall_sensitivity <- round(TP/(TP+FN),4)
+  precision <- round(TP/(TP+FP),4)
+  specificity <- round(TN/(TN+FP),4)
+  # 添加，预测的负例占比（业务解释：去除多少的样本，达到多少的recall）
+  neg_rate <- round((TN+FN)/(TP+TN+FP+FN),4)
+  re <- list('AUC' = auc,
+             'Confusion_Matrix'=tab,
+             'Statistics'=data.frame(value=c('accuracy'=accuracy,
+                                             'recall_sensitivity'=recall_sensitivity,
+                                             'precision'=precision,
+                                             'specificity'=specificity,
+                                             'neg_rate'=neg_rate)))
+  return(re)
+}
+pred=c(-1,1,1,1,1,1,1,-1,-1,1)
+y_real=c(1,-1,1,1,1,1,1,-1,1,1)
+get_confusion_stat(pred,y_real)
+```
+The advantage of the ROC curve is that when the distribution of positive and negative samples changes, their shape can basically remain unchanged, so its area AUC value can be said to be extremely suitable for unbalanced samples (for example, the above bank overdue data, the positive-negative ratio is extremely high Unbalanced) modeling assessment has been made. The larger the AUC, the better the model classification effect.
