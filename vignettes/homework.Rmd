@@ -1085,7 +1085,7 @@ gibbsR <- function(N, n,a,b,x)
 
 ```
 #绘图
-```{r}
+```
 library(png)
 ans1 <- readPNG("~/StatComp21094/data/pic/tuone.png")
 r <- nrow(ans1)/ncol(ans1) 
