@@ -55,7 +55,7 @@ pagerk <-function(pages){
   q
   
   A<-adjacencyMatrix(pages)
-  G<-dprobabilityMatrix(A)
+  G<-dProbabilityMatrix(A)
   q<-eigenMatrix(G,100)
   q
 }
